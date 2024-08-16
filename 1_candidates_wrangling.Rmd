@@ -1,0 +1,40 @@
+---
+title: "Data wrangling"
+author: "Silvia Téliz"
+date: "2024-08-14"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("~/Documents/Research/hues_of_victory")
+```
+
+```{r packages}
+library(tidyverse)
+library(readr)
+```
+
+
+```{r data}
+candidates_2024 <- read_csv("data/1_candidates_portrait.csv")
+deputies_65 <- read_csv("data/deputies_65.csv")
+deputies_66 <- read_csv("data/deputies_66.csv")
+senators_65 <- read_csv("data/senators_65.csv")
+senators_66 <- read_csv("data/senators_66.csv")
+
+```
+
+```{r}
+
+```
+
+
+```{r win_var}
+
+```
+
+```{r incumbency_var}
+
+```
+
