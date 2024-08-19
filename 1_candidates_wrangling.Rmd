@@ -6,13 +6,15 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+knitr::opts_chunk$set(echo = TRUE, message = FALSE)
 setwd("~/Documents/Research/hues_of_victory")
 ```
 
 ```{r packages}
 library(tidyverse)
 library(readr)
+library(magrittr)
+library(stringi)
 ```
 
 
@@ -25,10 +27,254 @@ senators_66 <- read_csv("data/senators_66.csv")
 
 ```
 
-```{r}
+# Data wrangling
+## Create and clean candidates dataset
+```{r select_vars}
+# Select variables from original dataset
+candidates_dataset <- subset(candidates_2024, select = c(PARTIDO_COALICION, CARGO, ENTIDAD, DISTRITO_FEDERAL,
+                            NOMBRE_CANDIDATO, TIPO_CANDIDATO, ESTATUS, EDAD, SEXO, portrait_link)) %>%
+  subset(CARGO == "DIPUTACIÓN FEDERAL MR" | CARGO == "PRESIDENCIA DE LA REPÚBLICA" | CARGO == "SENADURÍA FEDERAL MR") %>%
+  subset(TIPO_CANDIDATO == "Persona Propietaria")
+
+# Change column names
+colnames(candidates_dataset) <- c("party", "contest", "state", "district", "name", "type", "status", "age", "sex", "portrait_link")
 
 ```
 
+## Clean candidate names
+```{r clean_names}
+candidates_dataset$name %<>% 
+  stri_trans_general(id="Latin-ASCII") %>%  # Remove diacritics
+  tolower()
+
+deputies_65$name %<>%
+  stri_trans_general(id="Latin-ASCII") %>%  # Remove diacritics
+  tolower() %>% # Remove numbers
+  str_remove_all("\\d+") %>% # Remove space at the beginning of string
+  str_remove("^\\s+")
+
+deputies_66$name %<>% 
+  stri_trans_general(id="Latin-ASCII") %>%  # Remove diacritics
+  tolower()
+
+senators_65$name %<>% 
+  stri_trans_general(id="Latin-ASCII") %>%  # Remove diacritics
+  tolower()
+
+senators_66$name %<>% 
+  stri_trans_general(id="Latin-ASCII") %>%  # Remove diacritics
+  tolower()
+```
+
+## Homogenize state names
+```{r clean_state}
+#summary(as.factor(candidates_dataset$state))
+candidates_dataset$state %<>% fct_recode(AGS = c("AGUASCALIENTES"),
+                                   BC = c("BAJA CALIFORNIA"),
+                                   BCS = c("BAJA CALIFORNIA SUR"),
+                                   CA = c("CAMPECHE"),
+                                   COAH = c("COAHUILA"),
+                                   COL = c("COLIMA"),
+                                   CHIS = c("CHIAPAS"),
+                                   CHIH = c("CHIHUAHUA"),
+                                   CDMX = c("CIUDAD DE MEXICO"),
+                                   DUR = c("DURANGO"),
+                                   GTO = c("GUANAJUATO"),
+                                   GRO = c("GUERRERO"),
+                                   HGO = c("HIDALGO"),
+                                   JAL = c("JALISCO"),
+                                   MEX = c("MEXICO"),
+                                   MICH = c("MICHOACAN"),
+                                   MOR = c("MORELOS"),
+                                   NAY = c("NAYARIT"),
+                                   NL = c("NUEVO LEON"),
+                                   OAX = c("OAXACA"),
+                                   PUE = c("PUEBLA"),
+                                   QRO = c("QUERETARO"),
+                                   QROO = c("QUINTANA ROO"),
+                                   SLP = c("SAN LUIS POTOSI"),
+                                   SIN = c("SINALOA"),
+                                   SON = c("SONORA"),
+                                   TAB = c("TABASCO"),
+                                   TAM = c("TAMAULIPAS"),
+                                   TLAX = c("TLAXCALA"),
+                                   VER = c("VERACRUZ"),
+                                   YUC = c("YUCATAN"),
+                                   ZAC = c("ZACATECAS"))
+
+#summary(as.factor(deputies_65$state))
+deputies_65$state %<>% fct_recode(AGS = "Aguascalientes",
+                               BC = "Baja California",
+                               BCS = "Baja California Sur",
+                               CA = "Campeche",
+                               COL = "Colima",
+                               CHIS = "Chiapas",
+                               CHIH = "Chihuahua",
+                               CDMX = "Ciudad de México",
+                               COAH = "Coahuila",
+                               DUR = "Durango",
+                               GTO = "Guanajuato",
+                               GRO = "Guerrero",
+                               HGO = "Hidalgo",
+                               JAL = "Jalisco",
+                               MEX = "México",
+                               MICH = "Michoacán",
+                               MOR = "Morelos",
+                               NAY = "Nayarit",
+                               NL = "Nuevo León",
+                               OAX = "Oaxaca",
+                               PUE = "Puebla",
+                               QRO = "Querétaro",
+                               QROO = "Quintana Roo",
+                               SLP = "San Luis Potosí",
+                               SIN = "Sinaloa",
+                               SON = "Sonora",
+                               TAB = "Tabasco",
+                               TAM = "Tamaulipas",
+                               TLAX = "Tlaxcala",
+                               VER = "Veracruz",
+                               YUC = "Yucatán",
+                               ZAC = "Zacatecas")
+
+#summary(as.factor(deputies_66$state))
+deputies_66$state %<>% fct_recode(AGS = "Aguascalientes",
+                               BC = "Baja California",
+                               BCS = "Baja California Sur",
+                               CA = "Campeche",
+                               COL = "Colima",
+                               CHIS = "Chiapas",
+                               CHIH = "Chihuahua",
+                               CDMX = "Ciudad de México",
+                               COAH = "Coahuila",
+                               DUR = "Durango",
+                               GTO = "Guanajuato",
+                               GRO = "Guerrero",
+                               HGO = "Hidalgo",
+                               JAL = "Jalisco",
+                               MEX = "México",
+                               MICH = "Michoacán",
+                               MOR = "Morelos",
+                               NAY = "Nayarit",
+                               NL = "Nuevo León",
+                               OAX = "Oaxaca",
+                               PUE = "Puebla",
+                               QRO = "Querétaro",
+                               QROO = "Quintana Roo",
+                               SLP = "San Luis Potosí",
+                               SIN = "Sinaloa",
+                               SON = "Sonora",
+                               TAB = "Tabasco",
+                               TAM = "Tamaulipas",
+                               TLAX = "Tlaxcala",
+                               VER = "Veracruz",
+                               YUC = "Yucatán",
+                               ZAC = "Zacatecas")
+
+#summary(as.factor(senators_65$state))
+senators_65$state %<>% fct_recode(AGS = "Aguascalientes",
+                               BC = "Baja California",
+                               BCS = "Baja California Sur",
+                               CA = "Campeche",
+                               COL = "Colima",
+                               CHIS = "Chiapas",
+                               CHIH = "Chihuahua",
+                               CDMX = "Ciudad de México",
+                               COAH = "Coahuila",
+                               DUR = "Durango",
+                               GTO = "Guanajuato",
+                               GRO = "Guerrero",
+                               HGO = "Hidalgo",
+                               JAL = "Jalisco",
+                               MEX = "México",
+                               MICH = "Michoacán",
+                               MOR = "Morelos",
+                               NAY = "Nayarit",
+                               NL = "Nuevo León",
+                               OAX = "Oaxaca",
+                               PUE = "Puebla",
+                               QRO = "Querétaro",
+                               QROO = "Quintana Roo",
+                               SLP = "San Luis Potosí",
+                               SIN = "Sinaloa",
+                               SON = "Sonora",
+                               TAB = "Tabasco",
+                               TAM = "Tamaulipas",
+                               TLAX = "Tlaxcala",
+                               VER = "Veracruz",
+                               YUC = "Yucatán",
+                               ZAC = "Zacatecas")
+
+#summary(as.factor(senators_66$state))
+senators_66$state %<>% fct_recode(AGS = "Aguascalientes",
+                               BC = "Baja California",
+                               BCS = "Baja California Sur",
+                               CA = "Campeche",
+                               COL = "Colima",
+                               CHIS = "Chiapas",
+                               CHIH = "Chihuahua",
+                               CDMX = "Ciudad de México",
+                               COAH = "Coahuila",
+                               DUR = "Durango",
+                               GTO = "Guanajuato",
+                               GRO = "Guerrero",
+                               HGO = "Hidalgo",
+                               JAL = "Jalisco",
+                               MEX = "México",
+                               MICH = "Michoacán",
+                               MOR = "Morelos",
+                               NAY = "Nayarit",
+                               NL = "Nuevo León",
+                               OAX = "Oaxaca",
+                               PUE = "Puebla",
+                               QRO = "Querétaro",
+                               QROO = "Quintana Roo",
+                               SLP = "San Luis Potosí",
+                               SIN = "Sinaloa",
+                               SON = "Sonora",
+                               TAB = "Tabasco",
+                               TAM = "Tamaulipas",
+                               TLAX = "Tlaxcala",
+                               VER = "Veracruz",
+                               YUC = "Yucatán",
+                               ZAC = "Zacatecas")
+```
+
+
+## Homogenize party names
+```{r clean_party}
+#summary(as.factor(candidates_dataset$party))
+candidates_dataset$party %<>% fct_recode(CI = "CANDIDATURA INDEPENDIENTE",
+                                      MC = "MOVIMIENTO CIUDADANO",
+                                      PAN = "PARTIDO ACCIÓN NACIONAL",
+                                      PRD = "PARTIDO DE LA REVOLUCIÓN DEMOCRÁTICA",
+                                      PRI = "PARTIDO REVOLUCIONARIO INSTITUCIONAL",
+                                      PT = "PARTIDO DEL TRABAJO",
+                                      PVEM = "PARTIDO VERDE ECOLOGISTA DE MÉXICO",
+                                      MORENA_PT_PVEM = "SIGAMOS HACIENDO HISTORIA",
+                                      PAN_PRI_PRD = "FUERZA Y CORAZON POR MEXICO")
+
+#summary(as.factor(deputies_65$party))
+#summary(as.factor(deputies_66$party))
+deputies_66$party %<>% fct_recode(PVEM = "PV")
+
+#summary(as.factor(senators_65$party))
+senators_65$party %<>% fct_recode(PVEM = "PV")
+
+#summary(as.factor(senators_66$party))
+senators_66$party %<>% fct_recode(PVEM = "PV")
+```
+
+
+## Clean district numbers
+```{r clean_district}
+# Keep only numbers in "district" column for deputies datasets
+candidates_dataset$district <- gsub("\\D", "", candidates_dataset$district)
+deputies_65$district <- gsub("\\D", "", deputies_65$district)
+```
+
+
+
+# Create new variables
 
 ```{r win_var}
 
