@@ -45,6 +45,7 @@ colnames(candidates_dataset) <- c("party", "contest", "state", "district", "name
 ```{r clean_names}
 candidates_dataset$name %<>% 
   stri_trans_general(id="Latin-ASCII") %>%  # Remove diacritics
+  tolower() %>% # Remove numbers
   tolower()
 
 deputies_65$name %<>%
@@ -55,14 +56,17 @@ deputies_65$name %<>%
 
 deputies_66$name %<>% 
   stri_trans_general(id="Latin-ASCII") %>%  # Remove diacritics
+  tolower() %>% # Remove numbers
   tolower()
 
 senators_65$name %<>% 
   stri_trans_general(id="Latin-ASCII") %>%  # Remove diacritics
+  tolower() %>% # Remove numbers
   tolower()
 
 senators_66$name %<>% 
   stri_trans_general(id="Latin-ASCII") %>%  # Remove diacritics
+  tolower() %>% # Remove numbers
   tolower()
 ```
 
@@ -275,11 +279,78 @@ deputies_65$district <- gsub("\\D", "", deputies_65$district)
 
 
 # Create new variables
+## Create unique ID variable
+```{r id_var}
+# Extract last 3 words from name column
+candidates_dataset$short_name <- word(candidates_dataset$name, -3,-1)
 
-```{r win_var}
 
+deputies_65$last_name <- word(deputies_65$name, 1, 2) # For this dataset it is necessary to extract 
+                                                      # last name separately because name order is different
+deputies_65$first_name <- word(deputies_65$name, 3)
+deputies_65$short_name <- paste(deputies_65$first_name, deputies_65$last_name, sep = "_")
+deputies_65 <- deputies_65 %>% select(-last_name, -first_name) # Remove last_name and first_name columns
+
+
+deputies_66$short_name <- word(deputies_66$name, -3, -1)
+
+senators_65$short_name <- word(senators_65$name, -3, -1)
+
+senators_66$short_name <- word(senators_66$name, -3, -1)
+
+# Create the "id" variable by pasting last name and state
+candidates_dataset$id <- paste(candidates_dataset$short_name, candidates_dataset$state, sep = "_") %>% 
+  str_replace_all(" ", "_")
+
+deputies_65$id <- paste(deputies_65$short_name, deputies_65$state, sep = "_") %>% 
+  str_replace_all(" ", "_")
+
+deputies_66$id <- paste(deputies_66$short_name, deputies_66$state, sep = "_") %>% 
+  str_replace_all(" ", "_")
+
+senators_65$id <- paste(senators_65$short_name, senators_65$state, sep = "_") %>%
+  str_replace_all(" ", "_")
+
+senators_66$id <- paste(senators_66$short_name, senators_66$state, sep = "_") %>%
+  str_replace_all(" ", "_")
+
+# Check if all "id" values are unique
+candidates_dataset %>% 
+  count(id) %>% 
+  filter(n > 1)
+
+deputies_65 %>%
+  count(id) %>%
+  filter(n > 1)
+
+deputies_66 %>%
+  count(id) %>%
+  filter(n > 1)
+
+senators_65 %>%
+  count(id) %>%
+  filter(n > 1)
+
+senators_66 %>%
+  count(id) %>%
+  filter(n > 1)
 ```
 
+## Create election success variable
+```{r win_var}
+# Function to check if names from deputies dataset are present in candidates dataset
+check_name <- function(diputado, candidates) {
+  diputado_words <- str_split(diputado, " ", simplify = TRUE)
+  # Filter out any empty strings
+  diputado_words <- diputado_words[diputado_words != ""]
+  all(sapply(diputado_words, function(word) {
+    any(str_detect(candidates, fixed(word, ignore_case = TRUE)))
+  }))
+}
+```
+
+
+## Create incumbency variable
 ```{r incumbency_var}
 
 ```
